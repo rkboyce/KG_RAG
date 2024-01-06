@@ -4,19 +4,19 @@
 CONTEXT_VOLUME : 150
 QUESTION_VS_CONTEXT_SIMILARITY_PERCENTILE_THRESHOLD : 75
 QUESTION_VS_CONTEXT_MINIMUM_SIMILARITY : 0.5
-SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL : 'sentence-transformers/all-MiniLM-L6-v2'
-SENTENCE_EMBEDDING_MODEL_FOR_CONTEXT_RETRIEVAL : 'pritamdeka/S-PubMedBert-MS-MARCO'
+SENTENCE_EMBEDDING_MODEL_FOR_NODE_RETRIEVAL : '/opt/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/7dbbc90392e2f80f3d3c277d6e90027e55de9125'  # 'sentence-transformers/all-MiniLM-L6-v2'
+SENTENCE_EMBEDDING_MODEL_FOR_CONTEXT_RETRIEVAL : '/opt/huggingface/hub/models--pritamdeka--S-PubMedBert-MS-MARCO/snapshots/07302ceb7e7a19cdbbb500aef658fe40b65dcc8f' # 'pritamdeka/S-PubMedBert-MS-MARCO'
 
 # VectorDB hyperparameters
-VECTOR_DB_DISEASE_ENTITY_PATH : '/data/somank/KG_RAG/data/disease_with_relation_to_genes.pickle'
-VECTOR_DB_PATH : '/data/somank/KG_RAG/data/vectorDB/disease_nodes_db'
+VECTOR_DB_DISEASE_ENTITY_PATH : '/home/rdb20/git-repos/KG_RAG/data/disease_with_relation_to_genes.pickle'
+VECTOR_DB_PATH : '/home/rdb20/git-repos/KG_RAG/data/vectorDB/disease_nodes_db'
 VECTOR_DB_CHUNK_SIZE : 650
 VECTOR_DB_CHUNK_OVERLAP : 200
 VECTOR_DB_BATCH_SIZE : 200
-VECTOR_DB_SENTENCE_EMBEDDING_MODEL : 'sentence-transformers/all-MiniLM-L6-v2'
+VECTOR_DB_SENTENCE_EMBEDDING_MODEL : '/opt/huggingface/hub/models--sentence-transformers--all-MiniLM-L6-v2/snapshots/7dbbc90392e2f80f3d3c277d6e90027e55de9125' # sentence-transformers/all-MiniLM-L6-v2'
 
 # Path for context file from SPOKE KG
-NODE_CONTEXT_PATH : '/data/somank/KG_RAG/data/context_of_disease_which_has_relation_to_genes.csv'
+NODE_CONTEXT_PATH : '/home/rdb20/git-repos/KG_RAG/data/context_of_disease_which_has_relation_to_genes.csv'
 
 # Just note that, this assumes your GPT config file is in the $HOME path, if not, change it accordingly
 # Also, GPT '.env' file should contain values for API_KEY, and optionally API_VERSION and RESOURCE_ENDPOINT. We are not including those parameters in this yaml file
@@ -25,25 +25,25 @@ GPT_CONFIG_FILE : '$HOME/.gpt_config.env'
 GPT_API_TYPE : 'azure'
 
 # Llama model name (Refer Hugging face to get the correct name for the model version you would like to use, also make sure you have the right permission to use the model)
-LLAMA_MODEL_NAME : 'meta-llama/Llama-2-13b-chat-hf'
+LLAMA_MODEL_NAME : '/opt/huggingface/hub/models--Deci--DeciLM-7B-instruct/snapshots/fb62397a6f578945099ebc2ceef6b4a737b9f4fe'  # 'meta-llama/Llama-2-13b-chat-hf'
 LLAMA_MODEL_BRANCH : 'main'
 
 # Path for caching LLM model files (When the model gets downloaded from hugging face, it will be saved in this path)
-LLM_CACHE_DIR : '/data/somank/llm_data/llm_models/huggingface'
+LLM_CACHE_DIR : '/opt/huggingface/hub/models--Deci--DeciLM-7B-instruct/snapshots/fb62397a6f578945099ebc2ceef6b4a737b9f4fe' # '/home/rdb20/git-repos/llm_data/llm_models/huggingface'
 LLM_TEMPERATURE : 0
 
 # Path to save results
-SAVE_RESULTS_PATH : '/data/somank/KG_RAG/data/analysis_results'
+SAVE_RESULTS_PATH : '/home/rdb20/git-repos/KG_RAG/data/analysis_results'
 
 # File paths for test questions
-DRUG_REPURPOSING_PATH : '/data/somank/KG_RAG/data/drug_repurposing_questions_v2.csv'
-MCQ_PATH : '/data/somank/KG_RAG/data/test_questions_two_hop_mcq_from_monarch_and_robokop.csv'
-TRUE_FALSE_PATH : '/data/somank/KG_RAG/data/test_questions_one_hop_true_false_v2.csv'
-ONE_HOP_GRAPH_TRAVERSAL : '/data/somank/KG_RAG/data/one_hop_graph_traversal_questions_v2.csv'
-TWO_HOP_GRAPH_TRAVERSAL : '/data/somank/KG_RAG/data/two_hop_graph_traversal_questions.csv'
+DRUG_REPURPOSING_PATH : '/home/rdb20/git-repos/KG_RAG/data/drug_repurposing_questions_v2.csv'
+MCQ_PATH : '/home/rdb20/git-repos/KG_RAG/data/test_questions_two_hop_mcq_from_monarch_and_robokop.csv'
+TRUE_FALSE_PATH : '/home/rdb20/git-repos/KG_RAG/data/test_questions_one_hop_true_false_v2.csv'
+ONE_HOP_GRAPH_TRAVERSAL : '/home/rdb20/git-repos/KG_RAG/data/one_hop_graph_traversal_questions_v2.csv'
+TWO_HOP_GRAPH_TRAVERSAL : '/home/rdb20/git-repos/KG_RAG/data/two_hop_graph_traversal_questions.csv'
 
 # SPOKE-API params
-BASE_URI : 'https://spoke.rbvi.ucsf.edu'
+BASE_URI : 'http://localhost:9097/https://spoke.rbvi.ucsf.edu' # Requires a remote proxy from mears-proxy-01 to this machine. Was 'https://spoke.rbvi.ucsf.edu'
 cutoff_Compound_max_phase : 3
 cutoff_Protein_source : ['SwissProt']
 cutoff_DaG_diseases_sources : ['knowledge', 'experiments']

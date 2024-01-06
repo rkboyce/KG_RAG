@@ -19,6 +19,7 @@ from kg_rag.config_loader import *
 import ast
 import requests
 
+
 memory = Memory("cachegpt", verbose=0)
 
 # Config openai library
@@ -37,7 +38,6 @@ if api_version:
 torch.cuda.empty_cache()
 B_INST, E_INST = "[INST]", "[/INST]"
 B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
-
 
 def get_spoke_api_resp(base_uri, end_point, params=None):
     uri = base_uri + end_point
@@ -123,22 +123,35 @@ def get_context_using_spoke_api(node_value):
     return context
 
 
-
 def get_prompt(instruction, new_system_prompt):
     system_prompt = B_SYS + new_system_prompt + E_SYS
     prompt_template =  B_INST + system_prompt + instruction + E_INST
     return prompt_template
 
+SYSTEM_PROMPT_TEMPLATE ="""
+### System:
+{system_part}
+### User:
+{instruction}
+### Assistant:
+"""
+
+def get_deciLM_prompt_template(message: str, system_part: str) -> str:
+    return SYSTEM_PROMPT_TEMPLATE.format(instruction=message, system_part=system_part)
+
+
 def llama_model(model_name, branch_name, cache_dir, temperature=0, top_p=1, max_new_tokens=512, stream=False, method='method-1'):
     if method == 'method-1':
         tokenizer = AutoTokenizer.from_pretrained(model_name,
                                                  revision=branch_name,
-                                                 cache_dir=cache_dir)
+                                                  cache_dir=cache_dir,
+                                                  trust_remote_code=True)
         model = AutoModelForCausalLM.from_pretrained(model_name,                                             
                                             device_map='auto',
                                             torch_dtype=torch.float16,
                                             revision=branch_name,
-                                            cache_dir=cache_dir
+                                                     cache_dir=cache_dir,
+                                                     trust_remote_code=True
                                             )
     elif method == 'method-2':
         import transformers
@@ -245,7 +258,19 @@ def load_chroma(vector_db_path, sentence_embedding_model):
     return Chroma(persist_directory=vector_db_path, embedding_function=embedding_function)
 
 def retrieve_context(question, vectorstore, embedding_function, node_context_df, context_volume, context_sim_threshold, context_sim_min_threshold, api=True):
-    entities = disease_entity_extractor_v2(question)
+    #entities = disease_entity_extractor_v2(question)  ## Doesn't work on mears-prod-01 but it is just disease listing anyways
+    ### Begin of hack to get around call to GPT
+    import re
+    rgx = re.compile('.*Diseases: \[(.*)\]')
+    fnd = rgx.findall(question)
+    entities = None
+    if len(fnd) > 0:
+        entities = fnd[0].split(',')
+        print(f'retrieve_context: disease entities found: {entities}')
+    else:
+        print('retrieve_context: no disease entities found!')
+    ### end of hack to get around call to GPT
+        
     node_hits = []
     if entities:
         max_number_of_high_similarity_context_per_node = int(context_volume/len(entities))
@@ -298,9 +323,23 @@ def retrieve_context(question, vectorstore, embedding_function, node_context_df,
     
 def interactive(question, vectorstore, node_context_df, embedding_function_for_context_retrieval, llm_type, api=True, llama_method="method-1"):
     print(" ")
-    input("Press enter for Step 1 - Disease entity extraction using GPT-3.5-Turbo")
+    #input("Press enter for Step 1 - Disease entity extraction using GPT-3.5-Turbo")
+    input("Press enter for Step 1 - Disease entity extraction")
     print("Processing ...")
-    entities = disease_entity_extractor_v2(question)
+    #entities = disease_entity_extractor_v2(question)
+
+    ### Begin of hack to get around call to GPT
+    import re
+    rgx = re.compile('.*Diseases: \[(.*)\]')
+    fnd = rgx.findall(question)
+    entities = None
+    if len(fnd) > 0:
+        entities = fnd[0].split(',')
+        print(f'retrieve_context: disease entities found: {entities}')
+    else:
+        print('retrieve_context: no disease entities found!')
+    ### end of hack to get around call to GPT
+    
     max_number_of_high_similarity_context_per_node = int(config_data["CONTEXT_VOLUME"]/len(entities))
     print("Extracted entity from the prompt = '{}'".format(", ".join(entities)))
     print(" ")
@@ -352,11 +391,15 @@ def interactive(question, vectorstore, node_context_df, embedding_function_for_c
     print("Prompting ", llm_type)
     if llm_type == "llama":
         from langchain import PromptTemplate, LLMChain
-        template = get_prompt("Context:\n\n{context} \n\nQuestion: {question}", system_prompts["KG_RAG_BASED_TEXT_GENERATION"])
+        #template = get_prompt("Context:\n\n{context} \n\nQuestion: {question}", system_prompts["KG_RAG_BASED_TEXT_GENERATION"])
+        template = get_deciLM_prompt_template("Context:\n\n{context} \n\nQuestion: {question}", system_prompts["KG_RAG_BASED_TEXT_GENERATION"])
         prompt = PromptTemplate(template=template, input_variables=["context", "question"])
         llm = llama_model(config_data["LLAMA_MODEL_NAME"], config_data["LLAMA_MODEL_BRANCH"], config_data["LLM_CACHE_DIR"], stream=True, method=llama_method) 
         llm_chain = LLMChain(prompt=prompt, llm=llm)
         output = llm_chain.run(context=node_context_extracted, question=question)
+
+        sys.exit(f"Model's generation completed!")
+        
     elif "gpt" in llm_type:
         enriched_prompt = "Context: "+ node_context_extracted + "\n" + "Question: " + question
         output = get_GPT_response(enriched_prompt, system_prompts["KG_RAG_BASED_TEXT_GENERATION"], llm_type, llm_type, temperature=config_data["LLM_TEMPERATURE"])

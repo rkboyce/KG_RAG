@@ -1,7 +1,7 @@
+import sys
 from langchain import PromptTemplate, LLMChain
 from kg_rag.utility import *
 import argparse
-
 
 
 parser = argparse.ArgumentParser()
@@ -36,23 +36,25 @@ def main():
     print(" ")
     question = input("Enter your question : ")    
     if not INTERACTIVE:
-        template = get_prompt(INSTRUCTION, SYSTEM_PROMPT)
+        #template = get_prompt(INSTRUCTION, SYSTEM_PROMPT)
+        template = get_deciLM_prompt_template(INSTRUCTION, SYSTEM_PROMPT)
+        
         prompt = PromptTemplate(template=template, input_variables=["context", "question"])
         llm = llama_model(MODEL_NAME, BRANCH_NAME, CACHE_DIR, stream=True, method=METHOD) 
-        llm_chain = LLMChain(prompt=prompt, llm=llm)            
+        llm_chain = LLMChain(prompt=prompt, llm=llm)
+
         print("Retrieving context from SPOKE graph...")
         context = retrieve_context(question, vectorstore, embedding_function_for_context_retrieval, node_context_df, CONTEXT_VOLUME, QUESTION_VS_CONTEXT_SIMILARITY_PERCENTILE_THRESHOLD, QUESTION_VS_CONTEXT_MINIMUM_SIMILARITY)
-        print("Here is the KG-RAG based answer using Llama:")
+        print(f"Here is the KG-RAG based answer using model {MODEL_NAME}:")
         print("")
+                 
         output = llm_chain.run(context=context, question=question)
+
+        sys.exit(f"Model's generation completed!")
     else:
         interactive(question, vectorstore, node_context_df, embedding_function_for_context_retrieval, "llama", llama_method=METHOD)
 
-
-
-        
-
-
-
+    sys.exit()
+    
 if __name__ == "__main__":
     main()

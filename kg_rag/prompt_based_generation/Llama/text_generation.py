@@ -21,7 +21,8 @@ INSTRUCTION = "Question: {question}"
 
 def main():
     llm = llama_model(MODEL_NAME, BRANCH_NAME, CACHE_DIR, stream=True, method=METHOD)
-    template = get_prompt(INSTRUCTION, SYSTEM_PROMPT)
+    #template = get_prompt(INSTRUCTION, SYSTEM_PROMPT)
+    template = get_deciLM_prompt_template(INSTRUCTION, SYSTEM_PROMPT)
     prompt = PromptTemplate(template=template, input_variables=["question"])    
     llm_chain = LLMChain(prompt=prompt, llm=llm)
     print(" ")
@@ -30,6 +31,7 @@ def main():
     print("")
     output = llm_chain.run(question)
 
+    print(f"Final output from the model:\n{output}")
 
 
 if __name__ == "__main__":
