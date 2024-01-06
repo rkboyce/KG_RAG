@@ -1,0 +1,20 @@
+1. conda activate kg_rag
+
+2. On the 'twin' machinem set up a proxy for the SPOKE API on port 9097  - in the KG_RAG project folder:
+
+python simpleSPOKEProxy.py
+
+3. One the 'twin' machine, remote port forward the port 9097 to mears-prod-01
+
+ssh -R 9097:localhost:9097 rdb20@mears-prod-01.dbmi.pitt.edu
+
+4. Now, you can run the following commands on this machine:
+
+(kg_rag)$ python -m kg_rag.rag_based_generation.Llama.text_generation -m method-1
+
+(kg_rag)$ python -m kg_rag.rag_based_generation.Llama.text_generation -m method-1 -i True
+
+
+Note: a useful question:
+
+"What are genes associated with Acute Monocytic Leukemia? Diseases: [Acute monocytic leukemia]"
